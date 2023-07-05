@@ -342,6 +342,16 @@ impl Window {
     }
 
     #[inline]
+    pub fn begin_ime_input(&self) {
+        // Currently not implemented
+    }
+
+    #[inline]
+    pub fn end_ime_input(&self) {
+        // Currently not implemented
+    }
+
+    #[inline]
     pub fn focus_window(&self) {
         // Currently a no-op as it does not seem there is good support for this on web
     }
