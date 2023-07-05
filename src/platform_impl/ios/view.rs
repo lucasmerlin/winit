@@ -1,6 +1,6 @@
 #![allow(clippy::unnecessary_cast)]
 
-use objc2::foundation::{CGFloat, CGRect, MainThreadMarker, NSObject, NSSet};
+use objc2::foundation::{CGFloat, CGRect, MainThreadMarker, NSObject, NSSet, NSString};
 use objc2::rc::{Id, Shared};
 use objc2::runtime::Class;
 use objc2::{declare_class, extern_methods, msg_send, msg_send_id, ClassType};
@@ -13,7 +13,10 @@ use super::uikit::{
 use super::window::WindowId;
 use crate::{
     dpi::PhysicalPosition,
-    event::{DeviceId as RootDeviceId, Event, Force, Touch, TouchPhase, WindowEvent},
+    event::{
+        DeviceId as RootDeviceId, ElementState, Event, Force, KeyboardInput, ModifiersState, Touch,
+        TouchPhase, VirtualKeyCode, WindowEvent,
+    },
     platform::ios::ValidOrientations,
     platform_impl::platform::{
         app_state,
@@ -152,6 +155,28 @@ declare_class!(
         fn touches_cancelled(&self, touches: &NSSet<UITouch>, _event: Option<&UIEvent>) {
             self.handle_touches(touches)
         }
+
+        #[sel(canBecomeFirstResponder)]
+        fn can_become_first_responder(&self) -> bool {
+            true
+        }
+    }
+
+    unsafe impl Protocol<UIKeyInput> for WinitView {
+        #[sel(hasText)]
+        fn has_text(&self) -> bool {
+            true
+        }
+
+        #[sel(insertText:)]
+        fn insert_text(&self, _text: &NSString) {
+            self.handle_insert_text(_text)
+        }
+
+        #[sel(deleteBackward)]
+        fn delete_backward(&self) {
+            self.handle_delete_backward()
+        }
     }
 );
 
@@ -189,6 +214,45 @@ impl WinitView {
         }
 
         this
+    }
+
+    fn handle_insert_text(&self, text: &NSString) {
+        let window = self.window().unwrap();
+        let window_id = RootWindowId(window.id());
+        unsafe {
+            // send individual events for each character
+            app_state::handle_nonuser_events(text.to_string().chars().map(|c| {
+                EventWrapper::StaticEvent(Event::WindowEvent {
+                    window_id,
+                    event: WindowEvent::ReceivedCharacter(c),
+                })
+            }));
+        }
+    }
+
+    fn handle_delete_backward(&self) {
+        let window = self.window().unwrap();
+        let window_id = RootWindowId(window.id());
+        let uiscreen = window.screen();
+        unsafe {
+            app_state::handle_nonuser_events(std::iter::once(EventWrapper::StaticEvent(
+                Event::WindowEvent {
+                    window_id,
+                    event: WindowEvent::KeyboardInput {
+                        device_id: RootDeviceId(DeviceId {
+                            uiscreen: Id::as_ptr(&uiscreen),
+                        }),
+                        input: KeyboardInput {
+                            state: ElementState::Pressed,
+                            scancode: 0,
+                            virtual_keycode: Some(VirtualKeyCode::Back),
+                            modifiers: ModifiersState::default(),
+                        },
+                        is_synthetic: true,
+                    },
+                },
+            )));
+        }
     }
 
     fn handle_touches(&self, touches: &NSSet<UITouch>) {

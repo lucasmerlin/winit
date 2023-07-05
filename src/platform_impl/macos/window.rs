@@ -1178,6 +1178,12 @@ impl WinitWindow {
     pub fn set_ime_purpose(&self, _purpose: ImePurpose) {}
 
     #[inline]
+    pub fn begin_ime_input(&self) {}
+
+    #[inline]
+    pub fn end_ime_input(&self) {}
+
+    #[inline]
     pub fn focus_window(&self) {
         let is_minimized = self.isMiniaturized();
         let is_visible = self.isVisible();

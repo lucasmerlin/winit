@@ -307,6 +307,14 @@ impl Inner {
         warn!("`Window::set_ime_allowed` is ignored on iOS")
     }
 
+    pub fn begin_ime_input(&self) {
+        self.view.become_first_responder();
+    }
+
+    pub fn end_ime_input(&self) {
+        self.view.resign_first_responder();
+    }
+
     pub fn focus_window(&self) {
         warn!("`Window::set_focus` is ignored on iOS")
     }
