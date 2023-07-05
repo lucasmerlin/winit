@@ -1064,6 +1064,19 @@ impl Window {
         self.window.set_ime_purpose(purpose);
     }
 
+    /// Opens the IME input (soft keyboard) if the platform supports it.
+    /// Currently only supported on iOS.
+    #[inline]
+    pub fn begin_ime_input(&self) {
+        self.window.begin_ime_input();
+    }
+
+    /// Hides the IME input (soft keyboard).
+    #[inline]
+    pub fn end_ime_input(&self) {
+        self.window.end_ime_input();
+    }
+
     /// Brings the window to the front and sets input focus. Has no effect if the window is
     /// already in focus, minimized, or not visible.
     ///
