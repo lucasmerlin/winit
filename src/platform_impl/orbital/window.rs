@@ -7,6 +7,7 @@ use raw_window_handle::{
     OrbitalDisplayHandle, OrbitalWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
 
+use crate::event::TextInputState;
 use crate::{
     dpi::{PhysicalPosition, PhysicalSize, Position, Size},
     error,
@@ -337,6 +338,9 @@ impl Window {
 
     #[inline]
     pub fn end_ime_input(&self) {}
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn focus_window(&self) {}

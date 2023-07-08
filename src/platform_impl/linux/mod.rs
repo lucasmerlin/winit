@@ -24,6 +24,7 @@ use smol_str::SmolStr;
 pub use self::x11::XNotSupported;
 #[cfg(x11_platform)]
 use self::x11::{ffi::XVisualInfo, util::WindowType as XWindowType, XConnection, XError};
+use crate::event::TextInputState;
 #[cfg(x11_platform)]
 use crate::platform::x11::XlibErrorHook;
 use crate::{
@@ -530,6 +531,9 @@ impl Window {
     pub fn set_ime_purpose(&self, purpose: ImePurpose) {
         x11_or_wayland!(match self; Window(w) => w.set_ime_purpose(purpose))
     }
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn focus_window(&self) {

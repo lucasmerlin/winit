@@ -53,6 +53,7 @@ use windows_sys::Win32::{
     },
 };
 
+use crate::event::TextInputState;
 use crate::{
     dpi::{PhysicalPosition, PhysicalSize, Position, Size},
     error::{ExternalError, NotSupportedError, OsError as RootOsError},
@@ -744,6 +745,9 @@ impl Window {
 
     #[inline]
     pub fn end_ime_input(&self) {}
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn request_user_attention(&self, request_type: Option<UserAttentionType>) {

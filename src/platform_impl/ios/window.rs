@@ -14,6 +14,7 @@ use raw_window_handle::{RawDisplayHandle, RawWindowHandle, UiKitDisplayHandle, U
 
 use super::uikit::{UIApplication, UIScreen, UIScreenOverscanCompensation};
 use super::view::{WinitUIWindow, WinitView, WinitViewController};
+use crate::event::TextInputState;
 use crate::{
     dpi::{self, LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, Position, Size},
     error::{ExternalError, NotSupportedError, OsError as RootOsError},
@@ -314,6 +315,8 @@ impl Inner {
     pub fn end_ime_input(&self) {
         self.view.resign_first_responder();
     }
+
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     pub fn focus_window(&self) {
         warn!("`Window::set_focus` is ignored on iOS")

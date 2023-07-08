@@ -6,8 +6,7 @@ use crate::window::{
     WindowAttributes, WindowButtons, WindowId as RootWI, WindowLevel,
 };
 
-use raw_window_handle::{RawDisplayHandle, RawWindowHandle, WebDisplayHandle, WebWindowHandle};
-use web_sys::HtmlCanvasElement;
+use crate::event::TextInputState;
 
 use super::r#async::Dispatcher;
 use super::{backend, monitor::MonitorHandle, EventLoopWindowTarget, Fullscreen};
@@ -350,6 +349,9 @@ impl Window {
     pub fn end_ime_input(&self) {
         // Currently not implemented
     }
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn focus_window(&self) {
