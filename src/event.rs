@@ -429,6 +429,8 @@ pub enum WindowEvent<'a> {
     /// - **iOS / Android / Web / Orbital:** Unsupported.
     Ime(Ime),
 
+    TextInputState(TextInputState),
+
     /// The cursor has moved on the window.
     CursorMoved {
         device_id: DeviceId,
@@ -591,6 +593,7 @@ impl Clone for WindowEvent<'static> {
                 is_synthetic: *is_synthetic,
             },
             Ime(preedit_state) => Ime(preedit_state.clone()),
+            TextInputState(state) => TextInputState(state.clone()),
             ModifiersChanged(modifiers) => ModifiersChanged(*modifiers),
             CursorMoved {
                 device_id,
@@ -695,6 +698,7 @@ impl<'a> WindowEvent<'a> {
             }),
             ModifiersChanged(modifers) => Some(ModifiersChanged(modifers)),
             Ime(event) => Some(Ime(event)),
+            TextInputState(state) => Some(TextInputState(state)),
             CursorMoved {
                 device_id,
                 position,
@@ -1267,4 +1271,28 @@ pub enum MouseScrollDelta {
     /// this means moving your fingers right and down should give positive values,
     /// and move the content right and down (to reveal more things left and up).
     PixelDelta(PhysicalPosition<f64>),
+}
+
+/// This struct holds a span within a region of text from `start` (inclusive) to
+/// `end` (exclusive).
+///
+/// An empty span or cursor position is specified with `start == end`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct TextSpan {
+    /// The start of the span (inclusive)
+    pub start: usize,
+
+    /// The end of the span (exclusive)
+    pub end: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct TextInputState {
+    pub text: String,
+    /// A selection defined on the text.
+    pub selection: TextSpan,
+    /// A composing region defined on the text.
+    pub compose_region: Option<TextSpan>,
 }

@@ -31,6 +31,7 @@ use crate::{
         WindowAttributes, WindowButtons, WindowId as RootWindowId, WindowLevel,
     },
 };
+use crate::event::TextInputState;
 
 pub struct Inner {
     pub(crate) window: Id<WinitUIWindow, Shared>,
@@ -306,6 +307,16 @@ impl Inner {
     pub fn set_ime_purpose(&self, _purpose: ImePurpose) {
         warn!("`Window::set_ime_allowed` is ignored on iOS")
     }
+
+    pub fn begin_ime_input(&self) {
+        self.view.become_first_responder();
+    }
+
+    pub fn end_ime_input(&self) {
+        self.view.resign_first_responder();
+    }
+
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     pub fn focus_window(&self) {
         warn!("`Window::set_focus` is ignored on iOS")
