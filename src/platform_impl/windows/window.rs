@@ -75,6 +75,7 @@ use crate::{
         WindowAttributes, WindowButtons, WindowLevel,
     },
 };
+use crate::event::TextInputState;
 
 /// The Win32 implementation of the main `Window` object.
 pub(crate) struct Window {
@@ -741,6 +742,9 @@ impl Window {
 
     #[inline]
     pub fn end_ime_input(&self) {}
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn request_user_attention(&self, request_type: Option<UserAttentionType>) {

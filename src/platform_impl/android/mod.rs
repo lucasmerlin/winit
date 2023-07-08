@@ -581,6 +581,30 @@ impl<T: 'static> EventLoop<T> {
                         callback
                     );
                 }
+                InputEvent::TextEvent(ime_state) => {
+                    let event = event::Event::WindowEvent {
+                        window_id: window::WindowId(WindowId),
+                        event: event::WindowEvent::TextInputState(
+                            TextInputState {
+                                text: ime_state.text.to_owned(),
+                                selection: TextSpan {
+                                    start: ime_state.selection.start,
+                                    end: ime_state.selection.end,
+                                },
+                                compose_region: TextSpan {
+                                    start: ime_state.compose_region.start,
+                                    end: ime_state.compose_region.end,
+                                },
+                            }
+                        )
+                    };
+                    sticky_exit_callback(
+                        event,
+                        self.window_target(),
+                        control_flow,
+                        callback
+                    );
+                }
                 _ => {
                     warn!("Unknown android_activity input event {event:?}")
                 }
@@ -1010,9 +1034,27 @@ impl Window {
 
     pub fn set_ime_purpose(&self, _purpose: ImePurpose) {}
 
-    pub fn begin_ime_input(&self) {}
+    pub fn begin_ime_input(&self) {
+        self.app.show_soft_input(true);
+    }
 
-    pub fn end_ime_input(&self) {}
+    pub fn end_ime_input(&self) {
+        self.app.hide_soft_input(true);
+    }
+
+    pub fn set_text_input_state(&self, state: TextInputState) {
+        self.app.set_text_input_state(android_activity::input::TextInputState {
+            text: state.text,
+            selection: android_activity::input::TextSpan {
+                start: state.selection.start,
+                end: state.selection.end,
+            },
+            compose_region: android_activity::input::TextSpan {
+                start: state.compose_region.start,
+                end: state.compose_region.end,
+            },
+        });
+    }
 
     pub fn focus_window(&self) {}
 
@@ -1094,6 +1136,8 @@ impl Window {
 pub struct OsError;
 
 use std::fmt::{self, Display, Formatter};
+use crate::event::{TextInputState, TextSpan};
+
 impl Display for OsError {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         write!(fmt, "Android OS Error")
