@@ -14,6 +14,7 @@ use crate::{
     window,
     window::ImePurpose,
 };
+use crate::event::TextInputState;
 
 use super::{
     EventLoopWindowTarget, MonitorHandle, PlatformSpecificWindowBuilderAttributes, RedoxSocket,
@@ -332,6 +333,9 @@ impl Window {
 
     #[inline]
     pub fn end_ime_input(&self) {}
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn focus_window(&self) {}

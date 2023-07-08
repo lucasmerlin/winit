@@ -12,6 +12,7 @@ use crate::{
     monitor::{MonitorHandle, VideoMode},
     platform_impl,
 };
+use crate::event::TextInputState;
 
 pub use crate::icon::{BadIcon, Icon};
 
@@ -1075,6 +1076,10 @@ impl Window {
     #[inline]
     pub fn end_ime_input(&self) {
         self.window.end_ime_input();
+    }
+
+    pub fn set_text_input_state(&self, state: TextInputState) {
+        self.window.set_text_input_state(state);
     }
 
     /// Brings the window to the front and sets input focus. Has no effect if the window is

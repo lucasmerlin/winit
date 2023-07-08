@@ -15,6 +15,7 @@ use std::cell::{Ref, RefCell};
 use std::collections::vec_deque::IntoIter as VecDequeIter;
 use std::collections::VecDeque;
 use std::rc::Rc;
+use crate::event::TextInputState;
 
 pub struct Window {
     canvas: Rc<RefCell<backend::Canvas>>,
@@ -365,6 +366,9 @@ impl Window {
     pub fn end_ime_input(&self) {
         // Currently not implemented
     }
+
+    #[inline]
+    pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
     pub fn focus_window(&self) {

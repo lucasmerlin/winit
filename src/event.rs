@@ -403,6 +403,8 @@ pub enum WindowEvent<'a> {
     /// - **iOS / Android / Web / Orbital:** Unsupported.
     Ime(Ime),
 
+    TextInputState(TextInputState),
+
     /// The cursor has moved on the window.
     CursorMoved {
         device_id: DeviceId,
@@ -572,6 +574,7 @@ impl Clone for WindowEvent<'static> {
                 is_synthetic: *is_synthetic,
             },
             Ime(preedit_state) => Ime(preedit_state.clone()),
+            TextInputState(state) => TextInputState(state.clone()),
             ModifiersChanged(modifiers) => ModifiersChanged(*modifiers),
             #[allow(deprecated)]
             CursorMoved {
@@ -686,6 +689,7 @@ impl<'a> WindowEvent<'a> {
             }),
             ModifiersChanged(modifiers) => Some(ModifiersChanged(modifiers)),
             Ime(event) => Some(Ime(event)),
+            TextInputState(state) => Some(TextInputState(state)),
             #[allow(deprecated)]
             CursorMoved {
                 device_id,
@@ -1389,4 +1393,30 @@ mod modifiers_serde {
             Ok(m)
         }
     }
+}
+
+/// This struct holds a span within a region of text from `start` (inclusive) to
+/// `end` (exclusive).
+///
+/// An empty span or cursor position is specified with `Some(start) == Some(end)`.
+///
+/// An undefined span is specified with start = end = `None`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct TextSpan {
+    /// The start of the span (inclusive)
+    pub start: Option<usize>,
+
+    /// The end of the span (exclusive)
+    pub end: Option<usize>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub struct TextInputState {
+    pub text: String,
+    /// A selection defined on the text.
+    pub selection: TextSpan,
+    /// A composing region defined on the text.
+    pub compose_region: TextSpan,
 }
