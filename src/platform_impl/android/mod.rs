@@ -170,6 +170,11 @@ impl<T: 'static> EventLoop<T> {
         );
         let redraw_flag = SharedFlag::new();
 
+        // Listen for motion events on any device (Default is to only listen for touch screen events
+        android_app.clear_motion_event_filter();
+        // Enable pointer pressure detection
+        android_app.enable_pointer_event_axis(2);
+
         Ok(Self {
             android_app: android_app.clone(),
             window_target: event_loop::ActiveEventLoop {
