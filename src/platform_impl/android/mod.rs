@@ -174,6 +174,11 @@ impl<T: 'static> EventLoop<T> {
         let android_app = attributes.android_app.as_ref().expect("An `AndroidApp` as passed to android_main() is required to create an `EventLoop` on Android");
         let redraw_flag = SharedFlag::new();
 
+        // Listen for motion events on any device (Default is to only listen for touch screen events
+        android_app.clear_motion_event_filter();
+        // Enable pointer pressure detection
+        android_app.enable_pointer_event_axis(2);
+
         Ok(Self {
             android_app: android_app.clone(),
             window_target: event_loop::EventLoopWindowTarget {
