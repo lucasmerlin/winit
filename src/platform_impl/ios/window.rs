@@ -292,12 +292,16 @@ impl Inner {
         warn!("`Window::set_ime_cursor_area` is ignored on iOS")
     }
 
-    pub fn set_ime_allowed(&self, _allowed: bool) {
-        warn!("`Window::set_ime_allowed` is ignored on iOS")
+    pub fn set_ime_allowed(&self, allowed: bool) {
+        if allowed {
+            self.view.become_first_responder();
+        } else {
+            self.view.resign_first_responder();
+        }
     }
 
     pub fn set_ime_purpose(&self, _purpose: ImePurpose) {
-        warn!("`Window::set_ime_allowed` is ignored on iOS")
+        warn!("`Window::set_ime_purpose` is ignored on iOS")
     }
 
     pub fn focus_window(&self) {
