@@ -4,9 +4,11 @@ use std::cell::{Cell, RefCell};
 use objc2::rc::Retained;
 use objc2::runtime::{NSObjectProtocol, ProtocolObject};
 use objc2::{declare_class, msg_send, msg_send_id, mutability, sel, ClassType, DeclaredClass};
-use objc2_foundation::{CGFloat, CGPoint, CGRect, MainThreadMarker, NSObject, NSSet, NSString};
+use objc2_foundation::{
+    CGFloat, CGPoint, CGRect, CGSize, MainThreadMarker, NSObject, NSSet, NSString,
+};
 use objc2_ui_kit::{
-    UICoordinateSpace, UIEvent, UIForceTouchCapability, UIGestureRecognizer,
+    UIApplication, UICoordinateSpace, UIEvent, UIForceTouchCapability, UIGestureRecognizer,
     UIGestureRecognizerDelegate, UIGestureRecognizerState, UIKeyInput, UIPanGestureRecognizer,
     UIPinchGestureRecognizer, UIResponder, UIRotationGestureRecognizer, UITapGestureRecognizer,
     UITextInputTraits, UITouch, UITouchPhase, UITouchType, UITraitEnvironment, UIView,
@@ -14,12 +16,15 @@ use objc2_ui_kit::{
 
 use super::app_state::{self, EventWrapper};
 use super::window::WinitUIWindow;
-use crate::dpi::PhysicalPosition;
-use crate::event::{ElementState, Event, Force, KeyEvent, Touch, TouchPhase, WindowEvent};
 use crate::keyboard::{Key, KeyCode, KeyLocation, NamedKey, NativeKeyCode, PhysicalKey};
 use crate::platform_impl::KeyEventExtra;
+use crate::{
+    dpi::PhysicalPosition,
+    event::{ElementState, Event, Force, KeyEvent, Touch, TouchPhase, WindowEvent},
+    window::{WindowAttributes, WindowId as RootWindowId},
+};
+
 use crate::platform_impl::platform::DEVICE_ID;
-use crate::window::{WindowAttributes, WindowId as RootWindowId};
 
 pub struct WinitViewState {
     pinch_gesture_recognizer: RefCell<Option<Retained<UIPinchGestureRecognizer>>>,
@@ -68,7 +73,7 @@ declare_class!(
             let _: () = unsafe { msg_send![super(self), layoutSubviews] };
 
             let window = self.window().unwrap();
-            let window_bounds = window.bounds();
+            let window_bounds = unsafe { self.safe_area_screen_space() };
             let screen = window.screen();
             let screen_space = screen.coordinateSpace();
             let screen_frame = self.convertRect_toCoordinateSpace(window_bounds, &screen_space);
@@ -380,6 +385,45 @@ impl WinitView {
         this
     }
 
+    // requires main thread
+    pub(crate) unsafe fn safe_area_screen_space(&self) -> CGRect {
+        let screen = self.window().unwrap().screen();
+        let screen_space = screen.coordinateSpace();
+        let bounds = self.bounds();
+        if app_state::os_capabilities().safe_area {
+            let safe_area = self.safeAreaInsets();
+            let safe_bounds = CGRect {
+                origin: CGPoint {
+                    x: bounds.origin.x + safe_area.left,
+                    y: bounds.origin.y + safe_area.top,
+                },
+                size: CGSize {
+                    width: bounds.size.width - safe_area.left - safe_area.right,
+                    height: bounds.size.height - safe_area.top - safe_area.bottom,
+                },
+            };
+            self.convertRect_toCoordinateSpace(safe_bounds, &screen_space)
+        } else {
+            let screen_frame = self.convertRect_toCoordinateSpace(bounds, &screen_space);
+            let status_bar_frame = {
+                let app = UIApplication::sharedApplication(MainThreadMarker::new().unwrap());
+                app.statusBarFrame()
+            };
+            let (y, height) = if screen_frame.origin.y > status_bar_frame.size.height {
+                (screen_frame.origin.y, screen_frame.size.height)
+            } else {
+                let y = status_bar_frame.size.height;
+                let height = screen_frame.size.height
+                    - (status_bar_frame.size.height - screen_frame.origin.y);
+                (y, height)
+            };
+            CGRect {
+                origin: CGPoint { x: screen_frame.origin.x, y },
+                size: CGSize { width: screen_frame.size.width, height },
+            }
+        }
+    }
+
     fn window(&self) -> Option<Retained<WinitUIWindow>> {
         // SAFETY: `WinitView`s are always installed in a `WinitUIWindow`
         (**self).window().map(|window| unsafe { Retained::cast(window) })
@@ -479,7 +523,7 @@ impl WinitView {
         let mut touch_events = Vec::new();
         let os_supports_force = app_state::os_capabilities().force_touch;
         for touch in touches {
-            let logical_location = touch.locationInView(None);
+            let logical_location = touch.locationInView(Some(&self));
             let touch_type = touch.r#type();
             let force = if os_supports_force {
                 let trait_collection = self.traitCollection();

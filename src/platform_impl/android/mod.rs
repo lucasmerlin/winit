@@ -6,7 +6,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use android_activity::input::{InputEvent, KeyAction, Keycode, MotionAction};
+use android_activity::input::{InputEvent, KeyAction, KeyMapChar, Keycode, MotionAction};
 use android_activity::{
     AndroidApp, AndroidAppWaker, ConfigurationRef, InputStatus, MainEvent, Rect,
 };
@@ -462,7 +462,15 @@ impl<T: 'static> EventLoop<T> {
                                     logical_key: keycodes::to_logical(key_char, keycode),
                                     location: keycodes::to_location(keycode),
                                     repeat: key.repeat_count() > 0,
-                                    text: None,
+                                    text: match key_char {
+                                        None | Some(KeyMapChar::None) => None,
+                                        Some(KeyMapChar::CombiningAccent(char)) => {
+                                            Some(char.to_string().into())
+                                        },
+                                        Some(KeyMapChar::Unicode(char)) => {
+                                            Some(char.to_string().into())
+                                        },
+                                    },
                                     platform_specific: KeyEventExtra {},
                                 },
                                 is_synthetic: false,
