@@ -25,7 +25,7 @@ use crate::{
     window::{WindowAttributes, WindowId as RootWindowId},
 };
 use icrate::Foundation::{
-    CGFloat, CGRect, MainThreadMarker, NSObject, NSObjectProtocol, NSSet, NSString,
+    CGFloat, CGPoint, CGRect, CGSize, MainThreadMarker, NSObject, NSObjectProtocol, NSSet, NSString,
 };
 use objc2::declare::{Ivar, IvarDrop};
 use objc2::rc::Id;
@@ -81,7 +81,7 @@ declare_class!(
             let _: () = unsafe { msg_send![super(self), layoutSubviews] };
 
             let window = self.window().unwrap();
-            let window_bounds = window.bounds();
+            let window_bounds = unsafe { self.safe_area_screen_space() };
             let screen = window.screen();
             let screen_space = screen.coordinateSpace();
             let screen_frame = self.convertRect_toCoordinateSpace(window_bounds, &screen_space);
@@ -240,6 +240,53 @@ impl WinitView {
         this
     }
 
+    // requires main thread
+    pub(crate) unsafe fn safe_area_screen_space(&self) -> CGRect {
+        let screen = self.window().unwrap().screen();
+        let screen_space = screen.coordinateSpace();
+        let bounds = self.bounds();
+        if app_state::os_capabilities().safe_area {
+            let safe_area = self.safeAreaInsets();
+            let safe_bounds = CGRect {
+                origin: CGPoint {
+                    x: bounds.origin.x + safe_area.left,
+                    y: bounds.origin.y + safe_area.top,
+                },
+                size: CGSize {
+                    width: bounds.size.width - safe_area.left - safe_area.right,
+                    height: bounds.size.height - safe_area.top - safe_area.bottom,
+                },
+            };
+            self.convertRect_toCoordinateSpace(safe_bounds, &screen_space)
+        } else {
+            let screen_frame = self.convertRect_toCoordinateSpace(bounds, &screen_space);
+            let status_bar_frame = {
+                let app = UIApplication::shared(MainThreadMarker::new().unwrap()).expect(
+                    "`Window::get_inner_position` cannot be called before `EventLoop::run` on iOS",
+                );
+                app.statusBarFrame()
+            };
+            let (y, height) = if screen_frame.origin.y > status_bar_frame.size.height {
+                (screen_frame.origin.y, screen_frame.size.height)
+            } else {
+                let y = status_bar_frame.size.height;
+                let height = screen_frame.size.height
+                    - (status_bar_frame.size.height - screen_frame.origin.y);
+                (y, height)
+            };
+            CGRect {
+                origin: CGPoint {
+                    x: screen_frame.origin.x,
+                    y,
+                },
+                size: CGSize {
+                    width: screen_frame.size.width,
+                    height,
+                },
+            }
+        }
+    }
+
     fn handle_insert_text(&self, text: &NSString) {
         let window = self.window().unwrap();
         let uiscreen = window.screen();
@@ -311,7 +358,7 @@ impl WinitView {
         let mut touch_events = Vec::new();
         let os_supports_force = app_state::os_capabilities().force_touch;
         for touch in touches {
-            let logical_location = touch.locationInView(None);
+            let logical_location = touch.locationInView(Some(&self));
             let touch_type = touch.type_();
             let force = if os_supports_force {
                 let trait_collection = unsafe { self.traitCollection() };
