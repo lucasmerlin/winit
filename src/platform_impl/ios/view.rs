@@ -8,7 +8,7 @@ use objc2::{declare_class, extern_methods, msg_send, msg_send_id, ClassType};
 use super::uikit::{
     UIApplication, UIDevice, UIEvent, UIForceTouchCapability, UIInterfaceOrientationMask,
     UIResponder, UITouch, UITouchPhase, UITouchType, UITraitCollection, UIView, UIViewController,
-    UIWindow,
+    UIWindow, NSUserActivity, NSURL,
 };
 use super::window::WindowId;
 use crate::{
@@ -603,6 +603,41 @@ declare_class!(
         fn did_finish_launching(&self, _application: &UIApplication, _: *mut NSObject) -> bool {
             unsafe {
                 app_state::did_finish_launching();
+            }
+            true
+        }
+
+        #[sel(application:continueUserActivity:restorationHandler:)]
+        fn continue_user_activity(
+            &self,
+            application: &UIApplication,
+            user_activity: &NSUserActivity,
+            _: *mut NSObject,
+        ) -> bool {
+            let url = user_activity.webpageURL();
+            if let Some(url) = url {
+                let url_string = url.absoluteString().to_string();
+
+                unsafe {
+                    app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::OpenUrl(url_string)));
+                }
+                true
+            } else {
+                false
+            }
+        }
+
+        #[sel(application:openURL:options:)]
+        fn open_url(
+            &self,
+            _application: &UIApplication,
+            url: &NSURL,
+            _: *mut NSObject,
+        ) -> bool {
+            let url_string = url.absoluteString().to_string();
+
+            unsafe {
+                app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::OpenUrl(url_string)));
             }
             true
         }
