@@ -24,6 +24,7 @@ use crate::window::{
     CursorGrabMode, CursorIcon, ImePurpose, ResizeDirection, Theme, UserAttentionType,
     WindowAttributes, WindowButtons,
 };
+use crate::event::TextInputState;
 
 use super::env::WindowingFeatures;
 use super::event_loop::WinitState;

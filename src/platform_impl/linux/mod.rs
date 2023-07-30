@@ -529,6 +529,12 @@ impl Window {
     pub fn set_text_input_state(&self, state: TextInputState) {}
 
     #[inline]
+    pub fn begin_ime_input(&self) {}
+
+    #[inline]
+    pub fn end_ime_input(&self) {}
+
+    #[inline]
     pub fn focus_window(&self) {
         match self {
             #[cfg(x11_platform)]

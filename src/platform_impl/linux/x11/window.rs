@@ -1536,12 +1536,6 @@ impl UnownedWindow {
     pub fn set_ime_purpose(&self, _purpose: ImePurpose) {}
 
     #[inline]
-    pub fn begin_ime_input(&self) {}
-
-    #[inline]
-    pub fn end_ime_input(&self) {}
-
-    #[inline]
     pub fn focus_window(&self) {
         let state_atom = unsafe { self.xconn.get_atom_unchecked(b"WM_STATE\0") };
         let state_type_atom = unsafe { self.xconn.get_atom_unchecked(b"CARD32\0") };
