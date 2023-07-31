@@ -596,10 +596,12 @@ impl<T: 'static> EventLoop<T> {
                                     start: ime_state.selection.start,
                                     end: ime_state.selection.end,
                                 },
-                                compose_region: TextSpan {
-                                    start: ime_state.compose_region.start,
-                                    end: ime_state.compose_region.end,
-                                },
+                                compose_region: ime_state
+                                    .compose_region
+                                    .map(|region| TextSpan {
+                                        start: region.start,
+                                        end: region.end,
+                                    }),
                             }
                         )
                     };
@@ -1054,10 +1056,10 @@ impl Window {
                 start: state.selection.start,
                 end: state.selection.end,
             },
-            compose_region: android_activity::input::TextSpan {
-                start: state.compose_region.start,
-                end: state.compose_region.end,
-            },
+            compose_region: state.compose_region.map(|region| android_activity::input::TextSpan {
+                start: region.start,
+                end: region.end,
+            }),
         });
     }
 

@@ -1404,17 +1404,15 @@ mod modifiers_serde {
 /// This struct holds a span within a region of text from `start` (inclusive) to
 /// `end` (exclusive).
 ///
-/// An empty span or cursor position is specified with `Some(start) == Some(end)`.
-///
-/// An undefined span is specified with start = end = `None`.
+/// An empty span or cursor position is specified with `start == end`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct TextSpan {
     /// The start of the span (inclusive)
-    pub start: Option<usize>,
+    pub start: usize,
 
     /// The end of the span (exclusive)
-    pub end: Option<usize>,
+    pub end: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1424,5 +1422,5 @@ pub struct TextInputState {
     /// A selection defined on the text.
     pub selection: TextSpan,
     /// A composing region defined on the text.
-    pub compose_region: TextSpan,
+    pub compose_region: Option<TextSpan>,
 }
