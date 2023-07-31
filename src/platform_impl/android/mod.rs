@@ -409,8 +409,12 @@ impl<T: 'static> EventLoop<T> {
 
                     for pointer in pointers {
                         let location = PhysicalPosition {
-                            x: pointer.x() as _,
-                            y: pointer.y() as _,
+                            // TODO: This is a workaround for HelloPaint specifically,
+                            // needed because I modified the SurfaceView position to fit
+                            // inside the system ui. Now unfortunately the events were offset
+                            // so I correct this here.
+                            x: (pointer.x() - self.android_app.content_rect().left as f32) as _,
+                            y: (pointer.y() - self.android_app.content_rect().top as f32) as _,
                         };
                         trace!("Input event {device_id:?}, {phase:?}, loc={location:?}, pointer={pointer:?}");
                         let event = event::Event::WindowEvent {
