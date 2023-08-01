@@ -30,7 +30,6 @@ use crate::window::{
     CursorGrabMode, CursorIcon, ImePurpose, ResizeDirection, Theme, UserAttentionType,
     WindowAttributes, WindowButtons,
 };
-use crate::event::TextInputState;
 
 use super::event_loop::sink::EventSink;
 use super::output::MonitorHandle;
