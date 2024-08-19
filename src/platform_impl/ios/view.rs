@@ -17,8 +17,8 @@ use super::window::WinitUIWindow;
 use crate::dpi::PhysicalPosition;
 use crate::event::{ElementState, Event, Force, KeyEvent, Touch, TouchPhase, WindowEvent};
 use crate::keyboard::{Key, KeyCode, KeyLocation, NamedKey, NativeKeyCode, PhysicalKey};
-use crate::platform_impl::KeyEventExtra;
 use crate::platform_impl::platform::DEVICE_ID;
+use crate::platform_impl::KeyEventExtra;
 use crate::window::{WindowAttributes, WindowId as RootWindowId};
 
 pub struct WinitViewState {
@@ -544,21 +544,26 @@ impl WinitView {
         let window = self.window().unwrap();
         let uiscreen = window.screen();
         let window_id = RootWindowId(window.id());
-        unsafe {
-            let mtm = MainThreadMarker::new().unwrap();
-            // send individual events for each character
-            app_state::handle_nonuser_events(
-                mtm,
-                text.to_string().chars().map(|c| {
+        let mtm = MainThreadMarker::new().unwrap();
+        // send individual events for each character
+        app_state::handle_nonuser_events(
+            mtm,
+            text.to_string().chars().flat_map(|c| {
+                let text = smol_str::SmolStr::from_iter([c]);
+                [ElementState::Pressed, ElementState::Released].map(|state| {
                     EventWrapper::StaticEvent(Event::WindowEvent {
                         window_id,
                         event: WindowEvent::KeyboardInput {
                             event: KeyEvent {
-                                text: Some(smol_str::SmolStr::from_iter([c])),
+                                text: if state == ElementState::Pressed {
+                                    Some(text.clone())
+                                } else {
+                                    None
+                                },
                                 state: ElementState::Pressed,
                                 location: KeyLocation::Standard,
                                 repeat: false,
-                                logical_key: Key::Character(smol_str::SmolStr::from_iter([c])),
+                                logical_key: Key::Character(text.clone()),
                                 physical_key: PhysicalKey::Unidentified(
                                     NativeKeyCode::Unidentified,
                                 ),
@@ -568,9 +573,9 @@ impl WinitView {
                             device_id: DEVICE_ID,
                         },
                     })
-                }),
-            );
-        }
+                })
+            }),
+        );
     }
 
     fn handle_delete_backward(&self) {
