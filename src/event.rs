@@ -357,7 +357,7 @@ pub enum WindowEvent {
     /// ## Platform-specific
     ///
     /// - **Web:** Doesn't take into account CSS [`border`], [`padding`], or [`transform`].
-    /// - **macOS:** Unsupported.
+    /// - **macOS:** Only supported for pen/tablet input (Apple Pencil, Wacom tablets, etc.). Regular touchscreen input is unsupported.
     ///
     /// [`border`]: https://developer.mozilla.org/en-US/docs/Web/CSS/border
     /// [`padding`]: https://developer.mozilla.org/en-US/docs/Web/CSS/padding

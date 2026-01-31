@@ -7,8 +7,8 @@ use objc2::rc::{Retained, WeakId};
 use objc2::runtime::{AnyObject, Sel};
 use objc2::{declare_class, msg_send_id, mutability, sel, ClassType, DeclaredClass};
 use objc2_app_kit::{
-    NSApplication, NSCursor, NSEvent, NSEventPhase, NSResponder, NSTextInputClient,
-    NSTrackingRectTag, NSView, NSViewFrameDidChangeNotification,
+    NSApplication, NSCursor, NSEvent, NSEventPhase, NSPointingDeviceType, NSResponder,
+    NSTextInputClient, NSTrackingRectTag, NSView, NSViewFrameDidChangeNotification,
 };
 use objc2_foundation::{
     MainThreadMarker, NSArray, NSAttributedString, NSAttributedStringKey, NSCopying,
@@ -1078,19 +1078,16 @@ impl WinitView {
             position: view_point.to_physical(self.scale_factor()),
         });
 
-        // Extract pen/tablet pressure if available and send as Touch event
         let pressure = unsafe { event.pressure() };
-        if pressure > 0.0 {
-            use crate::event::{Force, Touch, TouchPhase};
+        use crate::event::{Force, Touch, TouchPhase};
 
-            self.queue_event(WindowEvent::Touch(Touch {
-                device_id: DEVICE_ID,
-                phase: TouchPhase::Moved,
-                location: view_point.to_physical(self.scale_factor()),
-                force: Some(Force::Normalized(pressure as f64)),
-                id: 0, // Use a fixed ID for pen events
-            }));
-        }
+        self.queue_event(WindowEvent::Touch(Touch {
+            device_id: DEVICE_ID,
+            phase: TouchPhase::Moved,
+            location: view_point.to_physical(self.scale_factor()),
+            force: Some(Force::Normalized(pressure as f64)),
+            id: 0, // Use a fixed ID for pen events
+        }));
     }
 }
 
