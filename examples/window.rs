@@ -467,6 +467,12 @@ impl ApplicationHandler<UserEvent> for Application {
             WindowEvent::DoubleTapGesture { .. } => {
                 info!("Smart zoom");
             },
+            WindowEvent::Touch(touch) => {
+                info!("Touch: {:?} at {:?}", touch.phase, touch.location);
+                if let Some(force) = touch.force {
+                    info!("  Pressure: {:?}", force);
+                }
+            },
             WindowEvent::TouchpadPressure { .. }
             | WindowEvent::HoveredFileCancelled
             | WindowEvent::KeyboardInput { .. }
@@ -475,7 +481,6 @@ impl ApplicationHandler<UserEvent> for Application {
             | WindowEvent::DroppedFile(_)
             | WindowEvent::HoveredFile(_)
             | WindowEvent::Destroyed
-            | WindowEvent::Touch(_)
             | WindowEvent::Moved(_) => (),
         }
     }

@@ -847,10 +847,11 @@ pub struct Touch {
     ///
     /// ## Platform-specific
     ///
-    /// - Only available on **iOS** 9.0+, **Windows** 8+, **Web**, and **Android**.
+    /// - Only available on **iOS** 9.0+, **Windows** 8+, **Web**, **Android**, and **macOS** (for pen/tablet input).
     /// - **Android**: This will never be [None]. If the device doesn't support pressure
     ///   sensitivity, force will either be 0.0 or 1.0. Also see the
     ///   [android documentation](https://developer.android.com/reference/android/view/MotionEvent#AXIS_PRESSURE).
+    /// - **macOS**: Touch events with pressure data are sent for pen/tablet input devices like Apple Pencil and Wacom tablets.
     pub force: Option<Force>,
     /// Unique identifier of a finger.
     pub id: u64,

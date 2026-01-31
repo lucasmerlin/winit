@@ -1077,6 +1077,20 @@ impl WinitView {
             device_id: DEVICE_ID,
             position: view_point.to_physical(self.scale_factor()),
         });
+
+        // Extract pen/tablet pressure if available and send as Touch event
+        let pressure = unsafe { event.pressure() };
+        if pressure > 0.0 {
+            use crate::event::{Force, Touch, TouchPhase};
+
+            self.queue_event(WindowEvent::Touch(Touch {
+                device_id: DEVICE_ID,
+                phase: TouchPhase::Moved,
+                location: view_point.to_physical(self.scale_factor()),
+                force: Some(Force::Normalized(pressure as f64)),
+                id: 0, // Use a fixed ID for pen events
+            }));
+        }
     }
 }
 
