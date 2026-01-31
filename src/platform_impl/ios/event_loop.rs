@@ -309,7 +309,7 @@ impl<T: 'static> EventLoop<T> {
                 // We intentionally override neither the application nor the delegate, to allow the
                 // user to do so themselves!
                 None,
-                None,
+                Some(&objc2_foundation::NSString::from_str("malmal.MobileInterop"))
             )
         };
         unreachable!()
