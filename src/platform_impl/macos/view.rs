@@ -577,6 +577,8 @@ declare_class!(
             trace_scope!("mouseDown:");
             self.mouse_motion(event);
             self.mouse_click(event, ElementState::Pressed);
+
+            self.touch_event(event, TouchPhase::Started);
         }
 
         #[method(mouseUp:)]
@@ -584,6 +586,8 @@ declare_class!(
             trace_scope!("mouseUp:");
             self.mouse_motion(event);
             self.mouse_click(event, ElementState::Released);
+
+            self.touch_event(event, TouchPhase::Ended);
         }
 
         #[method(rightMouseDown:)]
@@ -619,11 +623,13 @@ declare_class!(
         #[method(mouseMoved:)]
         fn mouse_moved(&self, event: &NSEvent) {
             self.mouse_motion(event);
+            self.touch_event(event, TouchPhase::Moved);
         }
 
         #[method(mouseDragged:)]
         fn mouse_dragged(&self, event: &NSEvent) {
             self.mouse_motion(event);
+            self.touch_event(event, TouchPhase::Moved);
         }
 
         #[method(rightMouseDragged:)]
@@ -1077,13 +1083,34 @@ impl WinitView {
             device_id: DEVICE_ID,
             position: view_point.to_physical(self.scale_factor()),
         });
+    }
+
+    fn touch_event(&self, event: &NSEvent, phase: TouchPhase) {
+        let window_point = unsafe { event.locationInWindow() };
+        let view_point = self.convertPoint_fromView(window_point, None);
+        let frame = self.frame();
+
+        if view_point.x.is_sign_negative()
+            || view_point.y.is_sign_negative()
+            || view_point.x > frame.size.width
+            || view_point.y > frame.size.height
+        {
+            let mouse_buttons_down = unsafe { NSEvent::pressedMouseButtons() };
+            if mouse_buttons_down == 0 {
+                // Point is outside of the client area (view) and no buttons are pressed
+                return;
+            }
+        }
+
+        let view_point = LogicalPosition::new(view_point.x, view_point.y);
+
 
         let pressure = unsafe { event.pressure() };
-        use crate::event::{Force, Touch, TouchPhase};
+        use crate::event::{Force, Touch};
 
         self.queue_event(WindowEvent::Touch(Touch {
             device_id: DEVICE_ID,
-            phase: TouchPhase::Moved,
+            phase,
             location: view_point.to_physical(self.scale_factor()),
             force: Some(Force::Normalized(pressure as f64)),
             id: 0, // Use a fixed ID for pen events
