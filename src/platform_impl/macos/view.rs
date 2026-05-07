@@ -7,8 +7,8 @@ use objc2::rc::{Retained, WeakId};
 use objc2::runtime::{AnyObject, Sel};
 use objc2::{declare_class, msg_send_id, mutability, sel, ClassType, DeclaredClass};
 use objc2_app_kit::{
-    NSApplication, NSCursor, NSEvent, NSEventPhase, NSPointingDeviceType, NSResponder,
-    NSTextInputClient, NSTrackingRectTag, NSView, NSViewFrameDidChangeNotification,
+    NSApplication, NSCursor, NSEvent, NSEventPhase, NSEventSubtype, NSResponder, NSTextInputClient,
+    NSTrackingRectTag, NSView, NSViewFrameDidChangeNotification,
 };
 use objc2_foundation::{
     MainThreadMarker, NSArray, NSAttributedString, NSAttributedStringKey, NSCopying,
@@ -1092,6 +1092,11 @@ impl WinitView {
     }
 
     fn touch_event(&self, event: &NSEvent, phase: TouchPhase) {
+        let subtype = unsafe { event.subtype() };
+        if subtype != NSEventSubtype::TabletPoint && subtype != NSEventSubtype::TabletProximity {
+            return;
+        }
+
         let window_point = unsafe { event.locationInWindow() };
         let view_point = self.convertPoint_fromView(window_point, None);
         let frame = self.frame();
@@ -1109,7 +1114,6 @@ impl WinitView {
         }
 
         let view_point = LogicalPosition::new(view_point.x, view_point.y);
-
 
         let pressure = unsafe { event.pressure() };
         use crate::event::{Force, Touch};
